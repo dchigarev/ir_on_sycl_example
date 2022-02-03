@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Read SPIR-V module from file
-  std::string spvFilename = "test.spv";
+  std::string spvFilename = "sample_kernel.spv";
   if (argc > 1) {
     spvFilename = std::string(argv[1]);
   }
