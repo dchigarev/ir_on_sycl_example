@@ -7,7 +7,7 @@ struct alignas(4096) AlignedArray {
   T data[N];
 };
 
-SYCL_EXTERNAL float kernel_name(float*, float*);
+SYCL_EXTERNAL void kernel_name(float*, float*);
 
 int main(int argc, char* argv[]) {
   // Initialize default sycl context
