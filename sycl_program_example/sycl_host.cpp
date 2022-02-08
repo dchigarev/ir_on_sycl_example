@@ -1,16 +1,13 @@
 #define __SYCL_INTERNAL_API
 
-#include <CL/cl.h>
 #include <CL/sycl.hpp>
-
 #include <CL/sycl/program.hpp>
 
 #include <string>
 #include <fstream>
 
-#include <level_zero/zet_api.h>
 #include <level_zero/ze_api.h>
-#include <CL/sycl/backend/level_zero.hpp>
+#include <sycl/ext/oneapi/backend/level_zero.hpp>
 
 
 template<typename T, size_t N>
@@ -18,8 +15,8 @@ struct alignas(4096) AlignedArray {
   T data[N];
 };
 
-cl::sycl::program read_module(std::string fname, cl::sycl::context& ctx) {
-  /// Reads SPIR-V binary module from file `fname` and wraps into a sycl::program
+ze_module_handle_t build_l0_module_from_spirv(std::string fname, cl::sycl::context& ctx) {
+  /// Reads SPIR-V binary module from file `fname` and wraps into L0Module
   /// with the passed sycl::context
 
   // read binary spirv from file
@@ -57,10 +54,10 @@ cl::sycl::program read_module(std::string fname, cl::sycl::context& ctx) {
   ZeModuleDesc.pConstants = nullptr;
 
   // build l0 context
-  auto ZeCtx = cl::sycl::get_native<cl::sycl::backend::level_zero>(ctx);
+  auto ZeCtx = cl::sycl::get_native<cl::sycl::backend::ext_oneapi_level_zero>(ctx);
 
   // build l0 device
-  auto ZeDevice = cl::sycl::get_native<cl::sycl::backend::level_zero>(ctx.get_devices()[0]);
+  auto ZeDevice = cl::sycl::get_native<cl::sycl::backend::ext_oneapi_level_zero>(ctx.get_devices()[0]);
 
   // build l0 module
   ze_module_handle_t ZeModule;
@@ -70,12 +67,7 @@ cl::sycl::program read_module(std::string fname, cl::sycl::context& ctx) {
     exit(1);
   }
 
-  // build sycl::program
-  auto sycl_program = cl::sycl::level_zero::make_program(
-    ctx, reinterpret_cast<uintptr_t>(ZeModule)
-  );
-
-  return sycl_program;
+  return ZeModule;
 }
 
 int main(int argc, char* argv[]) {
@@ -93,8 +85,13 @@ int main(int argc, char* argv[]) {
     spvFilename = std::string(argv[1]);
   }
 
-  auto sycl_program = read_module(spvFilename, ctx);
-  cl::sycl::kernel kernel = sycl_program.get_kernel("plus1");
+  auto l0Module = build_l0_module_from_spirv(spvFilename, ctx);
+  cl::sycl::program program = cl::sycl::ext::oneapi::level_zero::make_program(
+		  ctx,
+		  reinterpret_cast<uintptr_t>(l0Module)
+  );
+
+  cl::sycl::kernel kernel_obj = program.get_kernel("kernel_name");
 
   // hello world??
   constexpr int a_size = 32;
@@ -123,7 +120,7 @@ int main(int argc, char* argv[]) {
       auto b_acc = b_sycl.get_access<cl::sycl::access::mode::write>(cgh);
 
       cgh.set_args(a_acc, b_acc);
-      cgh.single_task(kernel);
+      cgh.parallel_for(cl::sycl::range<1>(a_size), kernel_obj);
     });
   }
 

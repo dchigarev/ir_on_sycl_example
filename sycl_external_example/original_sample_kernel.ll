@@ -1,7 +1,7 @@
 ; Example handmade kernel
 target triple = "spir-unknown-unknown"
 
-define spir_kernel void @plus1(float addrspace(1)* %src, float addrspace(1)* %dst) {
+define spir_kernel void @kernel_name(float addrspace(1)* %src, float addrspace(1)* %dst) {
 entry:
     %idx = call spir_func i32 @_Z13get_global_idj(i32 0)
     %srcidx = getelementptr inbounds float, float addrspace(1)* %src, i32 %idx
