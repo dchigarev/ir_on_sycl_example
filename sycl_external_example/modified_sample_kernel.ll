@@ -3,7 +3,7 @@
 target triple = "spir64-unknown-unknown"
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind readnone willreturn
-define spir_func void @_Z11kernel_namePfS_(float addrspace(1)* %src, float addrspace(1)* %dst) {
+define spir_func void @kernel_name(float addrspace(1)* %src, float addrspace(1)* %dst) {
 entry:
     %idx = call spir_func i32 @_Z13get_global_idj(i32 0)
     %srcidx = getelementptr inbounds float, float addrspace(1)* %src, i32 %idx
@@ -36,7 +36,7 @@ declare spir_func i32 @_Z13get_global_idj(i32)
 target triple = "x86_64-unknown-linux-gnu"
 
 ; Function Attrs: mustprogress noinline nounwind optnone uwtable
-define void @_Z11kernel_namePfS_(float addrspace(1)* %src, float addrspace(1)* %dst) {
+define void @kernel_name(float addrspace(1)* %src, float addrspace(1)* %dst) {
 entry:
     ret void
 }
